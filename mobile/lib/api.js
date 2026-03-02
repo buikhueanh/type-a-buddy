@@ -1,34 +1,30 @@
+// mobile/lib/api.js
 import { API_BASE_URL } from "../constants/config";
 
-async function request(path, options = {}) {
+async function request(path, { method = "GET", body } = {}) {
   const res = await fetch(`${API_BASE_URL}${path}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    ...options,
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: body ? JSON.stringify(body) : undefined,
   });
+
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`${options.method || "GET"} ${path} failed: ${res.status} ${text}`);
+    const message =
+      (data && data.detail && typeof data.detail === "string" && data.detail) ||
+      "Request failed";
+    throw new Error(message);
   }
 
-  if (res.status === 204) return null;
-  return await res.json();
+  return data;
 }
 
-export function fetchTasks() {
-  return request("/tasks");
+export function register(email, password) {
+  return request("/auth/register", { method: "POST", body: { email, password } });
 }
 
-export function createTask({ title, notes }) {
-  return request("/tasks", {
-    method: "POST",
-    body: JSON.stringify({ title, notes }),
-  });
-}
-
-export function deleteTask(id) {
-  return request(`/tasks/${id}`, { method: "DELETE" });
+export function login(email, password) {
+  return request("/auth/login", { method: "POST", body: { email, password } });
 }
