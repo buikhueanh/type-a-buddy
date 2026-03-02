@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException
 from bson import ObjectId
 from datetime import datetime, timezone
 
-from .database import get_db
-from .models import TaskCreate, TaskUpdate, TaskOut
+from ..database import get_db
+from ..schemas.tasks import TaskCreate, TaskUpdate, TaskOut
 
 router = APIRouter(prefix="/plans/{plan_id}/tasks", tags=["tasks"])
 

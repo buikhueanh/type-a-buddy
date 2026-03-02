@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException
 from bson import ObjectId
 from datetime import datetime, timezone
 
-from .database import get_db
-from .models import PlanCreate, PlanOut
+from ..database import get_db
+from ..schemas.plans import PlanCreate, PlanOut
 
 router = APIRouter(prefix="/plans", tags=["plans"])
 
