@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .database import get_client
-from .routes_plans import router as plans_router
-from .routes_tasks import router as tasks_router
+from .routes.plans import router as plans_router
+from .routes.tasks import router as tasks_router
+from .routes.auth import router as auth_router
 
 app = FastAPI()
 
@@ -30,5 +31,6 @@ def mongo_health():
     client.admin.command("ping")
     return {"mongo": "ok"}
 
+app.include_router(auth_router)
 app.include_router(plans_router)
 app.include_router(tasks_router)
