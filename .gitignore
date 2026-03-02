@@ -1,9 +1,19 @@
+# Environmental vars
+.env
+backend/.env
+mobile/.env
+
+# Node
+
+
 # Python
 __pycache__/
 *.pyc
 .venv/
+backend/.venv/
 
 # Node
+mobile/node_modules/
 node_modules/
 .expo/
 dist/
