@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import LoginScreen from "./screens/LoginScreen";
 import SignupScreen from "./screens/SignupScreen";
+import ForgotPasswordScreen from "./screens/ForgotPasswordScreen";
 
 export default function App() {
   const [screen, setScreen] = useState("login");
@@ -9,5 +10,13 @@ export default function App() {
   if (screen === "signup") {
     return <SignupScreen onGoLogin={() => setScreen("login")} />;
   }
-  return <LoginScreen onGoSignup={() => setScreen("signup")} />;
+  if (screen === "forgot") {
+    return <ForgotPasswordScreen onGoLogin={() => setScreen("login")} />;
+  }
+  return (
+    <LoginScreen
+      onGoSignup={() => setScreen("signup")}
+      onGoForgotPassword={() => setScreen("forgot")}
+    />
+  );
 }

@@ -28,3 +28,14 @@ export function register(email, password) {
 export function login(email, password) {
   return request("/auth/login", { method: "POST", body: { email, password } });
 }
+
+export function forgotPassword(email) {
+  return request("/auth/forgot-password", { method: "POST", body: { email } });
+}
+
+export function resetPassword(email, code, newPassword) {
+  return request("/auth/reset-password", {
+    method: "POST",
+    body: { email, code, new_password: newPassword },
+  });
+}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import Screen from "../components/Screen";
 import Card from "../components/Card";
 import TextField from "../components/TextField";
@@ -67,15 +67,19 @@ export default function SignupScreen({ onGoLogin }) {
           ) : null}
 
           <View style={{ marginTop: Spacing.xl }}>
-            <Button title="Sign Up" onPress={onSubmit} leftDot />
+            <Button title="Create Account" onPress={onSubmit} />
           </View>
 
-          <View style={{ marginTop: Spacing.md }}>
-            <Button
-              title="Back to Login"
+          <View style={{ marginTop: Spacing.xl, flexDirection: "row", justifyContent: "center", flexWrap: "wrap" }}>
+            <Text style={[Typography.small, { color: Colors.muted }]}>Already have an account? </Text>
+            <Pressable
               onPress={onGoLogin}
-              variant="secondary"
-            />
+              accessibilityRole="button"
+              accessibilityLabel="Sign in"
+              style={({ pressed }) => ({ opacity: pressed ? 0.7 : 1 })}
+            >
+              <Text style={[Typography.small, { color: Colors.secondary, fontWeight: "800" }]}>Sign In</Text>
+            </Pressable>
           </View>
         </Card>
       </View>
