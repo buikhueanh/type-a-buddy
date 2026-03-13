@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -92,7 +92,7 @@ def forgot_password(payload: PasswordResetRequest):
 
     code = generate_password_reset_code()
     code_hash = hash_password_reset_code(code)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Keep only one active code per user
     db.password_reset_codes.delete_many({"user_id": user["_id"]})
@@ -128,7 +128,7 @@ def reset_password(payload: PasswordResetConfirm):
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     expires_at = record.get("expires_at")
-    if not expires_at or expires_at <= datetime.utcnow():
+    if not expires_at or expires_at <= datetime.now(timezone.utc):
         db.password_reset_codes.delete_many({"user_id": user["_id"]})
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 

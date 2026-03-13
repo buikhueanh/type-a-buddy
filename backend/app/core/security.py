@@ -52,5 +52,4 @@ def verify_password_reset_code(code: str, code_hash: str) -> bool:
 
 
 def password_reset_code_expires_at():
-    # Store naive UTC datetimes for MongoDB compatibility.
-    return datetime.utcnow() + timedelta(minutes=PASSWORD_RESET_CODE_EXPIRE_MINUTES)
+    return datetime.now(timezone.utc) + timedelta(minutes=PASSWORD_RESET_CODE_EXPIRE_MINUTES)

@@ -73,3 +73,16 @@ CORS_ALLOW_ORIGINS = _env_csv(
 		"http://127.0.0.1:3000",
 	],
 )
+
+# Gemini API
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+
+
+def require_gemini_api_key() -> str:
+	"""Return GEMINI_API_KEY or raise with a clear message.
+
+	Keep config importable even when Gemini isn't configured.
+	"""
+	if not GEMINI_API_KEY:
+		raise RuntimeError("GEMINI_API_KEY is not set in backend/.env")
+	return GEMINI_API_KEY

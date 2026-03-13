@@ -1,3 +1,5 @@
+from datetime import timezone
+
 from pymongo import MongoClient
 from .config import MONGODB_URI, MONGODB_DB_NAME
 
@@ -6,7 +8,12 @@ _client: MongoClient | None = None
 def get_client() -> MongoClient:
     global _client
     if _client is None:
-        _client = MongoClient(MONGODB_URI, serverSelectionTimeoutMS=1000)
+        _client = MongoClient(
+            MONGODB_URI,
+            serverSelectionTimeoutMS=1000,
+            tz_aware=True,
+            tzinfo=timezone.utc,
+        )
     return _client
 
 def get_db():
