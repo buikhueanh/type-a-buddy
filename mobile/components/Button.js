@@ -25,17 +25,6 @@ export default function Button({ title, onPress, variant = "primary", leftDot = 
       })}
     >
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-        {leftDot ? (
-          <View
-            style={{
-              width: 10,
-              height: 10,
-              borderRadius: 5,
-              backgroundColor: Colors.highlight,
-              marginRight: Spacing.sm,
-            }}
-          />
-        ) : null}
         <Text style={[Typography.body, { color: textColor, fontWeight: "800" }]}>{title}</Text>
       </View>
     </Pressable>

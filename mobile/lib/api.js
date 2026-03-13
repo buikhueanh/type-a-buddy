@@ -39,3 +39,10 @@ export function resetPassword(email, code, newPassword) {
     body: { email, code, new_password: newPassword },
   });
 }
+
+export function generatePlan({ goal, deadline_at, hours_available_per_day }) {
+  return request("/plans/generate", {
+    method: "POST",
+    body: { goal, deadline_at, hours_available_per_day },
+  });
+}

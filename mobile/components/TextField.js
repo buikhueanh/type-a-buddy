@@ -11,6 +11,8 @@ export default function TextField({
   rightLabel,
   onRightPress,
   rightA11yLabel,
+  inputStyle,
+  ...textInputProps
 }) {
   return (
     <View style={{ marginTop: Spacing.lg }}>
@@ -32,11 +34,17 @@ export default function TextField({
           onChangeText={onChangeText}
           secureTextEntry={secureTextEntry}
           autoCapitalize={autoCapitalize}
-          style={{
-            flex: 1,
-            padding: Spacing.md,
-            color: Colors.text,
-          }}
+          placeholderTextColor={Colors.muted}
+          {...textInputProps}
+          style={[
+            {
+              flex: 1,
+              padding: Spacing.md,
+              color: Colors.text,
+            },
+            textInputProps.style,
+            inputStyle,
+          ]}
         />
 
         {rightLabel && onRightPress ? (

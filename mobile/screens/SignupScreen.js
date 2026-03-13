@@ -7,7 +7,7 @@ import Button from "../components/Button";
 import { register } from "../lib/api";
 import { Colors, Spacing, Typography } from "../theme";
 
-export default function SignupScreen({ onGoLogin }) {
+export default function SignupScreen({ onGoLogin, onGoHome }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +20,7 @@ export default function SignupScreen({ onGoLogin }) {
     try {
       await register(email.trim(), password);
       setStatus("+10 XP Unlocked. Account created.");
+      if (onGoHome) onGoHome();
     } catch (e) {
       setStatus(null);
       setError(e.message || "Sign up failed");
