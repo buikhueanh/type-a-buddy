@@ -53,3 +53,11 @@ class Plan(BaseModel):
     deadline_at: datetime
     hours_available_per_day: float = Field(gt=0, le=HOURS_AVAILABLE_PER_DAY_MAX)
     days: list[PlanDay] = Field(min_length=1)
+
+class SavePlanRequest(BaseModel):
+    goal: str = Field(min_length=1)
+    generatedPlan: Plan
+
+class SavePlanResponse(BaseModel):
+    message: str
+    planId: str
