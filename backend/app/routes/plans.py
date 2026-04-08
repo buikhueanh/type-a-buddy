@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from datetime import datetime, timezone
-from bson import ObjectId
 
 from ..schemas.plans import PlanningRequest, Plan, SavePlanRequest, SavePlanResponse
 from ..services.ai_planner import generate_plan_from_ai
@@ -24,7 +23,7 @@ def generate_plan(payload: PlanningRequest):
         )
     
 @router.post("/save", response_model=SavePlanResponse, status_code=status.HTTP_201_CREATED)
-def save_plan(
+async def save_plan(
     payload: SavePlanRequest,
     current_user=Depends(get_current_user),
     db=Depends(get_db),
@@ -40,7 +39,7 @@ def save_plan(
             "createdAt": datetime.now(timezone.utc),
         }
 
-        result = db.plans.insert_one(plan_document)
+        result = await db.plans.insert_one(plan_document)
 
         return SavePlanResponse(
             message="Plan saved successfully",

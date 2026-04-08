@@ -23,9 +23,9 @@ def health():
 
 
 @app.get("/mongo")
-def mongo_health():
+async def mongo_health():
     client = get_client()
-    client.admin.command("ping")
+    await client.admin.command("ping")
     return {"mongo": "ok"}
 
 
