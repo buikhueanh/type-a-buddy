@@ -141,6 +141,7 @@ export default function PlanInputScreen({ onGoHome, onGoLoading, onGoNewPlan, on
       goal: goal.trim(),
       deadline_at: deadline.toISOString(),
       hours_available_per_day: Number.parseFloat(hoursPerDay),
+      utc_offset_minutes: -new Date().getTimezoneOffset(),
     };
 
     if (onGoLoading) onGoLoading(payload);

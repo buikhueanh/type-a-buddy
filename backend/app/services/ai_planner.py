@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from google import genai
 
@@ -15,9 +15,17 @@ def now_utc() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def tz_from_utc_offset_minutes(utc_offset_minutes: int | None) -> timezone:
+    offset = utc_offset_minutes or 0
+    if offset < -14 * 60 or offset > 14 * 60:
+        raise ValueError("utc_offset_minutes must be between -840 and 840")
+    return timezone(timedelta(minutes=offset))
+
+
 def build_plan_prompt(
     payload: PlanningRequest,
     start_at: datetime,
+    deadline_at: datetime,
     planning_days: int,
     estimated_total_capacity_hours: float,
 ) -> str:
@@ -33,8 +41,8 @@ The JSON must match this exact structure:
 
 {{
   "goal_summary": "string",
-  "start_at": "YYYY-MM-DDTHH:MM:SS+00:00",
-  "deadline_at": "YYYY-MM-DDTHH:MM:SS+00:00",
+    "start_at": "YYYY-MM-DDTHH:MM:SS±HH:MM",
+    "deadline_at": "YYYY-MM-DDTHH:MM:SS±HH:MM",
   "hours_available_per_day": number,
   "days": [
     {{
@@ -58,13 +66,15 @@ Rules:
 5. Never return empty titles.
 6. Keep the plan concise and practical.
 7. notes may be null if not needed.
+8. The first day.date MUST equal the local calendar date of start_at.
+9. Use the same timezone offsets as start_at and deadline_at.
 
 User goal:
 {payload.goal}
 
 Planning inputs:
 start_at: {start_at.isoformat()}
-deadline_at: {payload.deadline_at.isoformat()}
+deadline_at: {deadline_at.isoformat()}
 hours_available_per_day: {payload.hours_available_per_day}
 planning_days: {planning_days}
 estimated_total_capacity_hours: {estimated_total_capacity_hours}
@@ -79,8 +89,21 @@ def extract_json_text(raw_text: str) -> str:
 
 
 def validate_plan_logic(plan: Plan) -> None:
+    if plan.start_at.tzinfo is None or plan.start_at.utcoffset() is None:
+        raise ValueError("start_at must include timezone")
+    if plan.deadline_at.tzinfo is None or plan.deadline_at.utcoffset() is None:
+        raise ValueError("deadline_at must include timezone")
+
     if plan.deadline_at <= plan.start_at:
         raise ValueError("deadline_at must be after start_at")
+
+    day_dates = [d.date for d in plan.days]
+    if min(day_dates) < plan.start_at.date():
+        raise ValueError(
+            "Plan starts before start_at date (timezone mismatch)"
+        )
+    if max(day_dates) > plan.deadline_at.date():
+        raise ValueError("Plan extends beyond deadline_at date")
 
     for day in plan.days:
         if not day.items:
@@ -100,12 +123,14 @@ def validate_plan_logic(plan: Plan) -> None:
 
 
 def generate_plan_from_ai(payload: PlanningRequest) -> Plan:
-    start_at = now_utc()
+    tz = tz_from_utc_offset_minutes(payload.utc_offset_minutes)
+    start_at = now_utc().astimezone(tz).replace(microsecond=0)
+    deadline_at = payload.deadline_at.astimezone(tz).replace(microsecond=0)
 
-    if payload.deadline_at <= start_at:
+    if deadline_at <= start_at:
         raise ValueError("deadline_at must be in the future")
 
-    planning_window = payload.deadline_at - start_at
+    planning_window = deadline_at - start_at
     planning_days = max(1, planning_window.days + 1)
     estimated_total_capacity_hours = (
         planning_days * payload.hours_available_per_day
@@ -114,6 +139,7 @@ def generate_plan_from_ai(payload: PlanningRequest) -> Plan:
     prompt = build_plan_prompt(
         payload=payload,
         start_at=start_at,
+        deadline_at=deadline_at,
         planning_days=planning_days,
         estimated_total_capacity_hours=estimated_total_capacity_hours,
     )
@@ -126,6 +152,11 @@ def generate_plan_from_ai(payload: PlanningRequest) -> Plan:
 
     raw_text = extract_json_text(response.text)
     data = json.loads(raw_text)
+
+    # Keep boundaries deterministic regardless of minor model drift.
+    data["start_at"] = start_at.isoformat()
+    data["deadline_at"] = deadline_at.isoformat()
+    data["hours_available_per_day"] = payload.hours_available_per_day
 
     plan = Plan(**data)
     validate_plan_logic(plan)

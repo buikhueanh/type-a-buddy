@@ -40,9 +40,9 @@ export function resetPassword(email, code, newPassword) {
   });
 }
 
-export function generatePlan({ goal, deadline_at, hours_available_per_day }) {
+export function generatePlan(payload) {
   return request("/plans/generate", {
     method: "POST",
-    body: { goal, deadline_at, hours_available_per_day },
+    body: payload,
   });
 }

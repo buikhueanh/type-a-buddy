@@ -16,6 +16,15 @@ class PlanningRequest(BaseModel):
     goal: str = Field(min_length=1, max_length=GOAL_MAX_LENGTH)
     deadline_at: datetime
     hours_available_per_day: float = Field(gt=0, le=HOURS_AVAILABLE_PER_DAY_MAX)
+    utc_offset_minutes: int | None = Field(
+        default=None,
+        ge=-14 * 60,
+        le=14 * 60,
+        description=(
+            "Client UTC offset in minutes (e.g. +420 for UTC+07:00). "
+            "If omitted, UTC is assumed."
+        ),
+    )
 
     @field_validator("deadline_at")
     @classmethod
@@ -25,6 +34,7 @@ class PlanningRequest(BaseModel):
                 "deadline_at must include timezone, for example 2026-03-20T23:59:00+00:00"
             )
         return value
+
 
 class PlanItem(BaseModel):
     title: str = Field(min_length=1, max_length=PLAN_ITEM_TITLE_MAX_LENGTH)

@@ -6,7 +6,14 @@ import { Colors, Spacing, Typography } from "../theme";
 
 function formatDayLabel(dateStr) {
   try {
-    const d = new Date(dateStr);
+    const isoDateOnly = /^\d{4}-\d{2}-\d{2}$/;
+    let d;
+    if (typeof dateStr === "string" && isoDateOnly.test(dateStr)) {
+      const [y, m, day] = dateStr.split("-").map((v) => Number.parseInt(v, 10));
+      d = new Date(y, m - 1, day);
+    } else {
+      d = new Date(dateStr);
+    }
     if (Number.isNaN(d.getTime())) return String(dateStr);
     return d.toLocaleDateString(undefined, { month: "long", day: "numeric" });
   } catch {
