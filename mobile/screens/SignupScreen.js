@@ -4,10 +4,10 @@ import Screen from "../components/Screen";
 import Card from "../components/Card";
 import TextField from "../components/TextField";
 import Button from "../components/Button";
-import { register } from "../lib/api";
+import { login, register } from "../lib/api";
 import { Colors, Spacing, Typography } from "../theme";
 
-export default function SignupScreen({ onGoLogin, onGoHome }) {
+export default function SignupScreen({ onGoLogin, onSignedIn }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,9 +18,16 @@ export default function SignupScreen({ onGoLogin, onGoHome }) {
     setError(null);
     setStatus("Creating your account...");
     try {
-      await register(email.trim(), password);
+      const cleanEmail = email.trim();
+      await register(cleanEmail, password);
+      setStatus("Account created. Signing you in...");
+
+      const res = await login(cleanEmail, password);
+      const token = res?.access_token;
+      if (!token) throw new Error("Login succeeded but no token returned");
+
       setStatus("+10 XP Unlocked. Account created.");
-      if (onGoHome) onGoHome();
+      if (onSignedIn) onSignedIn(token);
     } catch (e) {
       setStatus(null);
       setError(e.message || "Sign up failed");

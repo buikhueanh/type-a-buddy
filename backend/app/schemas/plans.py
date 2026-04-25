@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ..core.constants import (
     GOAL_MAX_LENGTH,
@@ -54,6 +54,29 @@ class Plan(BaseModel):
     hours_available_per_day: float = Field(gt=0, le=HOURS_AVAILABLE_PER_DAY_MAX)
     days: list[PlanDay] = Field(min_length=1)
 
+    @field_validator("start_at", "deadline_at")
+    @classmethod
+    def datetimes_must_include_timezone(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError(
+                "Plan datetimes must include timezone information"
+            )
+        return value
+
+    @model_validator(mode="after")
+    def validate_plan_consistency(self):
+        if self.deadline_at <= self.start_at:
+            raise ValueError("deadline_at must be after start_at")
+
+        for day in self.days:
+            total_hours = sum(item.duration_hours for item in day.items)
+            if total_hours > self.hours_available_per_day:
+                raise ValueError(
+                    f"Daily hours exceeded on {day.date}: "
+                    f"{total_hours} > {self.hours_available_per_day}"
+                )
+        return self
+
 class SavePlanRequest(BaseModel):
     goal: str = Field(min_length=1)
     generatedPlan: Plan
@@ -61,3 +84,23 @@ class SavePlanRequest(BaseModel):
 class SavePlanResponse(BaseModel):
     message: str
     planId: str
+
+
+class SavedPlanSummary(BaseModel):
+    planId: str
+    goal: str | None = None
+    goalSummary: str | None = None
+    deadlineAt: datetime | None = None
+    createdAt: datetime | None = None
+
+
+class SavedPlanDetail(BaseModel):
+    planId: str
+    goal: str | None = None
+    deadlineAt: datetime | None = None
+    createdAt: datetime | None = None
+    generatedPlan: Plan
+
+
+class DeletePlanResponse(BaseModel):
+    ok: bool
