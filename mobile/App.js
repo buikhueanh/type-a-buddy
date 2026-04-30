@@ -34,6 +34,14 @@ export default function App() {
     setScreen("savedPlanDetail");
   }
 
+  function logout() {
+    setAuthToken(null);
+    setPlanningPayload(null);
+    setPlanResult(null);
+    setSelectedPlanId(null);
+    setScreen("login");
+  }
+
   if (screen === "home") {
     return (
       <HomeScreen
@@ -41,6 +49,7 @@ export default function App() {
         onGoHome={goHome}
         onGoNewPlan={goNewPlan}
         onGoSavedPlans={goSavedPlans}
+        onLogout={logout}
       />
     );
   }
