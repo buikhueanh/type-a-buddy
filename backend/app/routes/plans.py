@@ -11,7 +11,7 @@ from ..schemas.plans import (
     SavedPlanDetail,
     DeletePlanResponse,
 )
-from ..services.ai_planner import generate_plan_from_ai
+from ..services.ai_planner import generate_plan_from_ai, PlanningInputError, ModelUnavailableError
 
 from .auth import get_current_user
 from ..database import get_db
@@ -29,12 +29,17 @@ def _obj_id(value: str, label: str) -> ObjectId:
 def generate_plan(payload: PlanningRequest):
     try:
         return generate_plan_from_ai(payload)
-    except ValueError as exc:
+    except PlanningInputError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    except ModelUnavailableError:
+        raise HTTPException(
+            status_code=503,
+            detail="Plan generation is temporarily unavailable. Please try again.",
+        )
     except Exception as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"Plan generation failed: {str(exc)}",
+            detail="Plan generation failed. Please try again.",
         )
     
 @router.post("/save", response_model=SavePlanResponse, status_code=status.HTTP_201_CREATED)

@@ -4,11 +4,23 @@ from datetime import datetime, timedelta, timezone
 from google import genai
 
 from ..config import require_gemini_api_key
-from ..core.constants import GEMINI_MODEL_NAME
+from ..core.constants import GEMINI_MODEL_NAME, GEMINI_FALLBACK_MODEL_NAMES
 from ..schemas.plans import PlanningRequest, Plan
 
 
 client = genai.Client(api_key=require_gemini_api_key())
+
+
+class PlanningInputError(ValueError):
+    pass
+
+
+class ModelUnavailableError(RuntimeError):
+    pass
+
+
+class ModelOutputError(RuntimeError):
+    pass
 
 
 def now_utc() -> datetime:
@@ -18,8 +30,24 @@ def now_utc() -> datetime:
 def tz_from_utc_offset_minutes(utc_offset_minutes: int | None) -> timezone:
     offset = utc_offset_minutes or 0
     if offset < -14 * 60 or offset > 14 * 60:
-        raise ValueError("utc_offset_minutes must be between -840 and 840")
+        raise PlanningInputError("utc_offset_minutes must be between -840 and 840")
     return timezone(timedelta(minutes=offset))
+
+
+def _is_transient_model_error(exc: Exception) -> bool:
+    msg = str(exc).lower()
+    transient_markers = [
+        "503",
+        "unavailable",
+        "429",
+        "resource_exhausted",
+        "rate limit",
+        "timeout",
+        "timed out",
+        "temporar",
+        "deadline exceeded",
+    ]
+    return any(m in msg for m in transient_markers)
 
 
 def build_plan_prompt(
@@ -128,7 +156,7 @@ def generate_plan_from_ai(payload: PlanningRequest) -> Plan:
     deadline_at = payload.deadline_at.astimezone(tz).replace(microsecond=0)
 
     if deadline_at <= start_at:
-        raise ValueError("deadline_at must be in the future")
+        raise PlanningInputError("deadline_at must be in the future")
 
     planning_window = deadline_at - start_at
     planning_days = max(1, planning_window.days + 1)
@@ -144,20 +172,48 @@ def generate_plan_from_ai(payload: PlanningRequest) -> Plan:
         estimated_total_capacity_hours=estimated_total_capacity_hours,
     )
 
-    response = client.models.generate_content(
-        model=GEMINI_MODEL_NAME,
-        contents=prompt,
-        config={"temperature": 0.3},
-    )
+    models_to_try = [GEMINI_MODEL_NAME] + list(GEMINI_FALLBACK_MODEL_NAMES)
+    last_exc: Exception | None = None
 
-    raw_text = extract_json_text(response.text)
-    data = json.loads(raw_text)
+    for idx, model_name in enumerate(models_to_try):
+        is_last = idx == (len(models_to_try) - 1)
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config={"temperature": 0.3},
+            )
 
-    # Keep boundaries deterministic regardless of minor model drift.
-    data["start_at"] = start_at.isoformat()
-    data["deadline_at"] = deadline_at.isoformat()
-    data["hours_available_per_day"] = payload.hours_available_per_day
+            raw_text = extract_json_text(response.text or "")
+            try:
+                data = json.loads(raw_text)
+            except Exception as exc:
+                raise ModelOutputError("Model returned invalid JSON") from exc
 
-    plan = Plan(**data)
-    validate_plan_logic(plan)
-    return plan
+            # Keep boundaries deterministic regardless of minor model drift.
+            data["start_at"] = start_at.isoformat()
+            data["deadline_at"] = deadline_at.isoformat()
+            data["hours_available_per_day"] = payload.hours_available_per_day
+
+            try:
+                plan = Plan(**data)
+                validate_plan_logic(plan)
+            except Exception as exc:
+                raise ModelOutputError("Model returned an invalid plan") from exc
+
+            return plan
+        except PlanningInputError:
+            raise
+        except Exception as exc:
+            last_exc = exc
+            if not is_last:
+                continue
+
+    # All models failed.
+    if last_exc is not None and _is_transient_model_error(last_exc):
+        raise ModelUnavailableError("Model is temporarily unavailable") from last_exc
+
+    if isinstance(last_exc, ModelOutputError):
+        raise last_exc
+
+    raise RuntimeError("Plan generation failed") from last_exc

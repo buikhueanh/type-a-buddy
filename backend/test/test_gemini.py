@@ -10,12 +10,16 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from app.config import require_gemini_api_key
+from app.core.constants import GEMINI_MODEL_NAME, GEMINI_FALLBACK_MODEL_NAMES
 
 client = genai.Client(api_key=require_gemini_api_key())
 
+print("Primary model:", GEMINI_MODEL_NAME)
+print("Fallback models:", ", ".join(GEMINI_FALLBACK_MODEL_NAMES) if GEMINI_FALLBACK_MODEL_NAMES else "(none)")
+
 try:
     response = client.models.generate_content(
-        model="gemini-2.5-flash",
+        model=GEMINI_MODEL_NAME,
         contents="Say hello in one sentence.",
     )
     print(response.text)
