@@ -8,7 +8,7 @@ import Button from "../components/Button";
 import { login } from "../lib/api";
 import { Colors, Spacing, Typography } from "../theme";
 
-export default function LoginScreen({ onGoSignup, onGoForgotPassword }) {
+export default function LoginScreen({ onGoSignup, onGoForgotPassword, onSignedIn }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -19,8 +19,11 @@ export default function LoginScreen({ onGoSignup, onGoForgotPassword }) {
     setError(null);
     setSuccess(null);
     try {
-      await login(email.trim(), password);
+      const res = await login(email.trim(), password);
+      const token = res?.access_token;
+      if (!token) throw new Error("Login succeeded but no token returned");
       setSuccess("+5 XP Welcome back.");
+      if (onSignedIn) onSignedIn(token);
     } catch (e) {
       setError(e.message || "Login failed");
     }

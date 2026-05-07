@@ -3,6 +3,11 @@
 backend/.env
 mobile/.env
 
+# Local database dumps / exports
+dump/
+*.bson
+*.metadata.json
+
 # Node
 
 

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -35,12 +35,10 @@ def _user_to_out(doc) -> UserOut:
     return UserOut(id=str(doc["_id"]), email=doc["email"])
 
 @router.post("/register", response_model=UserOut)
-def register(payload: UserCreate):
-    db = get_db()
-
+async def register(payload: UserCreate, db=Depends(get_db)):
     email = payload.email.strip().lower()
 
-    existing = db.users.find_one({"email": email}, {"_id": 1})
+    existing = await db.users.find_one({"email": email}, projection={"_id": 1})
     if existing:
         raise HTTPException(status_code=409, detail="Email already registered")
 
@@ -48,16 +46,14 @@ def register(payload: UserCreate):
         "email": email,
         "password_hash": hash_password(payload.password),
     }
-    res = db.users.insert_one(doc)
-    created = db.users.find_one({"_id": res.inserted_id})
+    res = await db.users.insert_one(doc)
+    created = await db.users.find_one({"_id": res.inserted_id})
     return _user_to_out(created)
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest):
-    db = get_db()
-
+async def login(payload: LoginRequest, db=Depends(get_db)):
     email = payload.email.strip().lower()
-    user = db.users.find_one({"email": email})
+    user = await db.users.find_one({"email": email})
     if not user:
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
@@ -69,34 +65,33 @@ def login(payload: LoginRequest):
 
 
 @router.post("/forgot-password", response_model=PasswordResetStartResponse)
-def forgot_password(payload: PasswordResetRequest):
+async def forgot_password(payload: PasswordResetRequest, db=Depends(get_db)):
     """Start password reset flow.
 
     For privacy, this always returns ok=True even if the email doesn't exist.
     In local/dev you can set PASSWORD_RESET_RETURN_CODE=true to return the code
     directly (in addition to sending email, if SMTP is configured).
     """
-    db = get_db()
     email = payload.email.strip().lower()
-    user = db.users.find_one({"email": email}, {"_id": 1})
+    user = await db.users.find_one({"email": email}, projection={"_id": 1})
 
     if not user:
         return PasswordResetStartResponse(ok=True)
 
     # Ensure TTL cleanup for expired codes
     try:
-        db.password_reset_codes.create_index("expires_at", expireAfterSeconds=0)
-        db.password_reset_codes.create_index([("user_id", 1)])
+        await db.password_reset_codes.create_index("expires_at", expireAfterSeconds=0)
+        await db.password_reset_codes.create_index([("user_id", 1)])
     except Exception:
         pass
 
     code = generate_password_reset_code()
     code_hash = hash_password_reset_code(code)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
 
     # Keep only one active code per user
-    db.password_reset_codes.delete_many({"user_id": user["_id"]})
-    db.password_reset_codes.insert_one(
+    await db.password_reset_codes.delete_many({"user_id": user["_id"]})
+    await db.password_reset_codes.insert_one(
         {
             "user_id": user["_id"],
             "email": email,
@@ -115,36 +110,37 @@ def forgot_password(payload: PasswordResetRequest):
 
 
 @router.post("/reset-password", response_model=OkResponse)
-def reset_password(payload: PasswordResetConfirm):
-    db = get_db()
-
+async def reset_password(payload: PasswordResetConfirm, db=Depends(get_db)):
     email = payload.email.strip().lower()
-    user = db.users.find_one({"email": email}, {"_id": 1})
+    user = await db.users.find_one({"email": email}, projection={"_id": 1})
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
-    record = db.password_reset_codes.find_one({"user_id": user["_id"]})
+    record = await db.password_reset_codes.find_one({"user_id": user["_id"]})
     if not record:
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     expires_at = record.get("expires_at")
-    if not expires_at or expires_at <= datetime.utcnow():
-        db.password_reset_codes.delete_many({"user_id": user["_id"]})
+    if not expires_at or expires_at <= datetime.now(timezone.utc):
+        await db.password_reset_codes.delete_many({"user_id": user["_id"]})
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
     if not verify_password_reset_code(payload.code, record.get("code_hash", "")):
         raise HTTPException(status_code=400, detail="Invalid or expired code")
 
-    db.users.update_one(
+    await db.users.update_one(
         {"_id": user["_id"]},
         {"$set": {"password_hash": hash_password(payload.new_password)}},
     )
 
-    db.password_reset_codes.delete_many({"user_id": user["_id"]})
+    await db.password_reset_codes.delete_many({"user_id": user["_id"]})
 
     return OkResponse(ok=True)
 
-def get_current_user(creds: HTTPAuthorizationCredentials = Depends(bearer)) -> UserOut:
+async def get_current_user(
+    creds: HTTPAuthorizationCredentials = Depends(bearer),
+    db=Depends(get_db),
+) -> UserOut:
     token = creds.credentials
     try:
         payload = decode_token(token)
@@ -155,13 +151,12 @@ def get_current_user(creds: HTTPAuthorizationCredentials = Depends(bearer)) -> U
     if not user_id or not ObjectId.is_valid(user_id):
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    db = get_db()
-    user = db.users.find_one({"_id": ObjectId(user_id)})
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
     return _user_to_out(user)
 
 @router.get("/me", response_model=UserOut)
-def me(current_user: UserOut = Depends(get_current_user)):
+async def me(current_user: UserOut = Depends(get_current_user)):
     return current_user

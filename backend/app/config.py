@@ -33,7 +33,12 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 # Database
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://127.0.0.1:27017")
+# Support both names to avoid confusion across hosts/docs.
+MONGODB_URI = (
+	os.getenv("MONGODB_URI")
+	or os.getenv("MONGO_URI")
+	or "mongodb://127.0.0.1:27017"
+)
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "type_a_buddy")
 
 
@@ -73,3 +78,16 @@ CORS_ALLOW_ORIGINS = _env_csv(
 		"http://127.0.0.1:3000",
 	],
 )
+
+# Gemini API
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+
+
+def require_gemini_api_key() -> str:
+	"""Return GEMINI_API_KEY or raise with a clear message.
+
+	Keep config importable even when Gemini isn't configured.
+	"""
+	if not GEMINI_API_KEY:
+		raise RuntimeError("GEMINI_API_KEY is not set in backend/.env")
+	return GEMINI_API_KEY

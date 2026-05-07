@@ -1,19 +1,23 @@
 import React from "react";
-import { SafeAreaView, ScrollView } from "react-native";
+import { SafeAreaView, ScrollView, View } from "react-native";
 import { Colors, Spacing } from "../theme";
 
-export default function Screen({ children }) {
+export default function Screen({ children, footer }) {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: Colors.bg }}>
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          padding: Spacing.xl,
-        }}
-        keyboardShouldPersistTaps="handled"
-      >
-        {children}
-      </ScrollView>
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            padding: Spacing.xl,
+          }}
+          keyboardShouldPersistTaps="handled"
+        >
+          {children}
+        </ScrollView>
+
+        {footer ? <View>{footer}</View> : null}
+      </View>
     </SafeAreaView>
   );
 }

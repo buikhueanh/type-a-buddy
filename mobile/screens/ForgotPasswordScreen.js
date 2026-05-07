@@ -41,7 +41,8 @@ export default function ForgotPasswordScreen({ onGoLogin }) {
 
     try {
       await resetPassword(email.trim(), code.trim(), newPassword);
-      setStatus("Password updated. You can log in now.");
+      setStatus("Password updated. Redirecting to sign in...");
+      onGoLogin && onGoLogin();
     } catch (e) {
       setStatus(null);
       setError(e.message || "Reset failed");
