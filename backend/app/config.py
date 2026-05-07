@@ -33,7 +33,12 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 # Database
-MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://127.0.0.1:27017")
+# Support both names to avoid confusion across hosts/docs.
+MONGODB_URI = (
+	os.getenv("MONGODB_URI")
+	or os.getenv("MONGO_URI")
+	or "mongodb://127.0.0.1:27017"
+)
 MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "type_a_buddy")
 
 
