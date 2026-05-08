@@ -57,7 +57,7 @@ Screens show the end-to-end user journey from authentication to creating and man
 
 ### Demo Videos
 
-Generating the Plan + Save the Plan
+Save the Generated Plan
 
 [![Generate plan flow](docs/gen-plan-screen.gif)](docs/gen-plan-screen.mp4)
 
