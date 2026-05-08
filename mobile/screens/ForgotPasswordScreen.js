@@ -42,6 +42,10 @@ export default function ForgotPasswordScreen({ onGoLogin }) {
   }
 
   async function onReset() {
+    if (!canReset) {
+      setError("Please enter email, code, and new password.");
+      return;
+    }
     setError(null);
     setStatus("Resetting password...");
 
@@ -100,7 +104,7 @@ export default function ForgotPasswordScreen({ onGoLogin }) {
             />
 
             <View style={{ marginTop: Spacing.xl, opacity: canReset ? 1 : 0.7 }}>
-              <Button title="Reset password" onPress={onReset} />
+              <Button title="Reset password" onPress={onReset} disabled={!canReset} />
             </View>
           </View>
 
