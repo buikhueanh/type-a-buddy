@@ -41,16 +41,16 @@ Screens show the end-to-end user journey from authentication to creating and man
 
 <table>
 	<tr>
-		<td align="center"><img src="docs/login.png" width="220" alt="Login" /><br /><sub>Login</sub></td>
 		<td align="center"><img src="docs/signup.png" width="220" alt="Signup" /><br /><sub>Signup</sub></td>
+		<td align="center"><img src="docs/login.png" width="220" alt="Login" /><br /><sub>Login</sub></td>
+		<td align="center"><img src="docs/reset-pw.png" width="220" alt="Reset password" /><br /><sub>Reset password</sub></td>
 		<td align="center"><img src="docs/homepage.png" width="220" alt="Home" /><br /><sub>Home</sub></td>
-		<td align="center"><img src="docs/loading-screen.png" width="220" alt="Loading" /><br /><sub>Loading</sub></td>
 	</tr>
 	<tr>
 		<td align="center"><img src="docs/create-plan-screen.png" width="220" alt="Create plan" /><br /><sub>Create plan</sub></td>
+		<td align="center"><img src="docs/loading-screen.png" width="220" alt="Loading" /><br /><sub>Loading</sub></td>
 		<td align="center"><img src="docs/detailed-plan-screen.png" width="220" alt="Detailed plan" /><br /><sub>Detailed plan</sub></td>
 		<td align="center"><img src="docs/saved-plan-screen.png" width="220" alt="Saved plans" /><br /><sub>Saved plans</sub></td>
-		<td align="center"><img src="docs/reset-pw.png" width="220" alt="Reset password" /><br /><sub>Reset password</sub></td>
 	</tr>
 </table>
 
