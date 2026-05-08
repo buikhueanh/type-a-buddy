@@ -56,7 +56,6 @@ Screens show the end-to-end user journey from authentication to creating and man
 </table>
 
 ### Demo Videos
-Click a GIF to open the full MP4:
 
 Generating the Plan
 
