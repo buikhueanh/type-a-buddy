@@ -7,7 +7,7 @@ Type-A Buddy is a planning assistant with a FastAPI backend and an Expo mobile a
 - Mobile: Expo (React Native)
 - AI: Gemini (via `google-genai`)
 
-## Quick Start (Professor Setup)
+## Quick Start
 The backend and MongoDB are already deployed. You only need to run the mobile app locally.
 
 1) Install prerequisites
