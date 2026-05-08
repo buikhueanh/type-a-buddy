@@ -7,6 +7,15 @@ from .. import config
 logger = logging.getLogger(__name__)
 
 
+def _mask_email(email: str) -> str:
+    try:
+        local, domain = email.split("@", 1)
+    except ValueError:
+        return "***"
+    local_masked = (local[:1] + "***" + local[-1:]) if len(local) >= 2 else "***"
+    return f"{local_masked}@{domain}"
+
+
 def smtp_is_configured() -> bool:
     return bool(config.SMTP_HOST and config.SMTP_FROM)
 
@@ -71,10 +80,38 @@ def send_password_reset_code_email(*, to_email: str, code: str) -> None:
 
 def try_send_password_reset_code_email(*, to_email: str, code: str) -> None:
     if not smtp_is_configured():
-        logger.info("SMTP not configured; skipping reset code email")
+        logger.warning(
+            "SMTP not configured; skipping reset code email",
+            extra={
+                "smtp_host_set": bool(config.SMTP_HOST),
+                "smtp_from_set": bool(config.SMTP_FROM),
+                "to_email": _mask_email(to_email),
+            },
+        )
         return
     try:
         send_password_reset_code_email(to_email=to_email, code=code)
-        logger.info("Reset code email sent", extra={"to_email": to_email})
+        logger.info(
+            "Reset code email sent",
+            extra={
+                "to_email": _mask_email(to_email),
+                "smtp_host": config.SMTP_HOST,
+                "smtp_port": config.SMTP_PORT,
+                "smtp_tls": config.SMTP_TLS,
+                "smtp_ssl": config.SMTP_SSL,
+                "smtp_user_set": bool(config.SMTP_USER),
+            },
+        )
     except Exception:
-        logger.warning("Failed to send reset code email", exc_info=True)
+        logger.warning(
+            "Failed to send reset code email",
+            exc_info=True,
+            extra={
+                "to_email": _mask_email(to_email),
+                "smtp_host": config.SMTP_HOST,
+                "smtp_port": config.SMTP_PORT,
+                "smtp_tls": config.SMTP_TLS,
+                "smtp_ssl": config.SMTP_SSL,
+                "smtp_user_set": bool(config.SMTP_USER),
+            },
+        )

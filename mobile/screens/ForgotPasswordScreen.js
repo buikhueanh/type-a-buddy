@@ -14,6 +14,7 @@ export default function ForgotPasswordScreen({ onGoLogin }) {
   const [showPassword, setShowPassword] = useState(false);
   const [status, setStatus] = useState(null);
   const [error, setError] = useState(null);
+  const [returnedCode, setReturnedCode] = useState(null);
 
   const canReset = useMemo(
     () => email.trim() && code.trim().length === 6 && newPassword.trim(),
@@ -23,11 +24,16 @@ export default function ForgotPasswordScreen({ onGoLogin }) {
   async function onSendLink() {
     setError(null);
     setStatus("Requesting code...");
+    setReturnedCode(null);
 
     try {
       const res = await forgotPassword(email.trim());
       // In dev, backend may return code for convenience.
-      if (res && res.code) setCode(String(res.code));
+      if (res && res.code) {
+        const nextCode = String(res.code);
+        setCode(nextCode);
+        setReturnedCode(nextCode);
+      }
       setStatus("If that email exists, a 6-digit code was sent.");
     } catch (e) {
       setStatus(null);
@@ -100,6 +106,17 @@ export default function ForgotPasswordScreen({ onGoLogin }) {
 
           {status ? <Text style={{ marginTop: Spacing.lg, color: Colors.success }}>{status}</Text> : null}
           {error ? <Text style={{ marginTop: Spacing.lg, color: Colors.danger }}>{error}</Text> : null}
+          {returnedCode ? (
+            <View style={{ marginTop: Spacing.lg }}>
+              <Text style={[Typography.small, { color: Colors.muted }]}>Demo code</Text>
+              <Text style={[Typography.h2, { color: Colors.text, marginTop: Spacing.xs }]}>
+                {returnedCode}
+              </Text>
+              <Text style={[Typography.body, { color: Colors.muted, marginTop: Spacing.xs }]}>
+                Copy this code into the field above.
+              </Text>
+            </View>
+          ) : null}
 
           <View style={{ marginTop: Spacing.xl, alignItems: "center" }}>
             <Pressable
