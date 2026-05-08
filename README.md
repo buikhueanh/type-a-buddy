@@ -49,8 +49,9 @@ Screens show the end-to-end user journey from authentication to creating and man
 	<tr>
 		<td align="center"><img src="docs/create-plan-screen.png" width="220" alt="Create plan" /><br /><sub>Create plan</sub></td>
 		<td align="center"><img src="docs/loading-screen.png" width="220" alt="Loading" /><br /><sub>Loading</sub></td>
+		<td align="center"><img src="docs/saved-plan-screen.png" width="220" alt="Saved plans lists" /><br /><sub>Saved plans</sub></td>
 		<td align="center"><img src="docs/detailed-plan-screen.png" width="220" alt="Detailed plan" /><br /><sub>Detailed plan</sub></td>
-		<td align="center"><img src="docs/saved-plan-screen.png" width="220" alt="Saved plans" /><br /><sub>Saved plans</sub></td>
+	
 	</tr>
 </table>
 
