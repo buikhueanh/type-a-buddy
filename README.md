@@ -55,10 +55,11 @@ Screens show the end-to-end user journey from authentication to creating and man
 </table>
 
 ### Demo Videos
-GitHub does not always render inline video tags, so use direct links:
+Click a GIF to open the full MP4:
 
-- [Generate plan flow](docs/gen-plan-screen.mp4)
-- [Delete saved plan flow](docs/delete-saved-plan-flow.mp4)
+[![Generate plan flow](docs/gen-plan-screen.gif)](docs/gen-plan-screen.mp4)
+
+[![Delete saved plan flow](docs/delete-saved-plan-flow.gif)](docs/delete-saved-plan-flow.mp4)
 
 ---
 
