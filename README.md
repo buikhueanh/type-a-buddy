@@ -34,6 +34,34 @@ Demo flow:
 3) The API returns the code; the app shows it in the UI.
 4) User copies the code into the reset form and sets a new password.
 
+## User Manual (Quick Guide)
+1) Create an account
+- Open the app and tap "Sign Up".
+- Enter email and password, then create the account.
+
+2) Log in
+- Enter your email and password on the Login screen.
+
+3) Create a plan
+- Tap "Create New Plan".
+- Fill in goal, deadline date/time, and daily focus time.
+- Tap "Generate Plan" and wait for the plan to appear.
+
+4) Save a plan
+- On the generated plan screen, tap "Save Plan".
+
+5) View saved plans
+- Use the bottom navigation to open "Saved Plans".
+- Tap a plan to view the full details.
+
+6) Delete a saved plan
+- In the plan detail view, tap "Delete".
+
+7) Reset password (demo mode)
+- Tap "Forgot Password" on the login screen.
+- Submit your email and copy the demo code that appears.
+- Paste the code and set a new password.
+
 ## Media (Photos / Video)
 
 ### Screenshots
